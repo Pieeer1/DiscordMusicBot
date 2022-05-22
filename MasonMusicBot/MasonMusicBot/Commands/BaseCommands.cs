@@ -20,18 +20,16 @@ namespace MasonMusicBot.Commands
     internal class BaseCommands : BaseCommandModule
     {
         private static bool playing = false;
-        private static AudioOutStream dstream = null;
-        private static IAudioClient client = null;
-        private string url { get; set; }
 
         private int counter = 0;
 
         private VoiceTransmitSink transmit { get; set; }
 
+        private Stream pcm { get; set; }
+
         private VoiceNextConnection connection { get; set; }
 
         private List<string> queue = new List<string>();
-        private List<string> skip = new List<string>();
 
         [Command("ping")]
         public async Task Ping(CommandContext ctx)
@@ -42,10 +40,6 @@ namespace MasonMusicBot.Commands
         [Command("play")]
         public async Task Play(CommandContext ctx, [RemainingText] string url)
         {
-            if (skip != null)
-            {
-                queue = skip;
-            }
             queue.Add(url);
             queue = queue.Distinct().ToList();
             if (playing == true)
@@ -97,8 +91,7 @@ namespace MasonMusicBot.Commands
                             UseShellExecute = false
                         });
 
-                        Stream pcm = ffmpeg.StandardOutput.BaseStream;
-
+                        pcm = ffmpeg.StandardOutput.BaseStream;
 
 
                         await pcm.CopyToAsync(transmit);
@@ -115,6 +108,7 @@ namespace MasonMusicBot.Commands
             }
             transmit.Dispose();
             await transmit.FlushAsync();
+            counter = 0;
         }
         [Command("queue")]
         public async Task ShowQueue(CommandContext ctx)
@@ -134,15 +128,21 @@ namespace MasonMusicBot.Commands
             {
                 playing = false;
                 queue.RemoveAt(0);
-                skip = queue;
-                queue.Clear();
-                connection.Disconnect();
-                await Play(ctx, skip[0]);
-
+                transmit.Dispose();
+                connection.Dispose();
+                pcm.Dispose();
+                if (queue.Count > 0)
+                {
+                    await Play(ctx, queue[0]);
+                }
+                else
+                {
+                    await ctx.Channel.SendMessageAsync($"No more songs to skip").ConfigureAwait(false);
+                }
             }
-            catch
+            catch(Exception ex)
             {
-
+                Console.WriteLine(ex.Message);
             }
         }
 
@@ -173,14 +173,15 @@ namespace MasonMusicBot.Commands
             try
             {
                 await ctx.Channel.SendMessageAsync("Stopping Song").ConfigureAwait(false);
-                transmit.Dispose();
-                await transmit.FlushAsync();
-                queue.Clear();
                 playing = false;
+                queue.RemoveAt(0);
+                transmit.Dispose();
+                connection.Dispose();
+                pcm.Dispose();
             }
-            catch
-            { 
-            
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
     }
