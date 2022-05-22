@@ -106,9 +106,10 @@ namespace MasonMusicBot.Commands
                     Console.WriteLine(ex.Message);
                 }
             }
+            queue.RemoveAt(0);
             transmit.Dispose();
-            await transmit.FlushAsync();
-            counter = 0;
+            connection.Dispose();
+            pcm.Dispose();
         }
         [Command("queue")]
         public async Task ShowQueue(CommandContext ctx)
@@ -145,14 +146,11 @@ namespace MasonMusicBot.Commands
                 Console.WriteLine(ex.Message);
             }
         }
-
-
         [Command("pause")]
         public async Task Pause(CommandContext ctx)
         {
             if (playing == true)
             {
-
                 await ctx.Channel.SendMessageAsync("Pausing Song").ConfigureAwait(false);
                 transmit.Pause();
             }
@@ -162,7 +160,6 @@ namespace MasonMusicBot.Commands
         {
             if (playing == true)
             {
-
                 await ctx.Channel.SendMessageAsync("Continuing Song").ConfigureAwait(false);
                 await transmit.ResumeAsync();
             }
