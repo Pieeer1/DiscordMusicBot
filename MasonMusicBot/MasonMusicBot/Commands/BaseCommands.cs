@@ -23,6 +23,8 @@ namespace MasonMusicBot.Commands
 
         private int counter = 0;
 
+        private static readonly HttpClient client = new HttpClient();
+
         private VoiceTransmitSink transmit { get; set; }
 
         private Stream pcm { get; set; }
@@ -181,5 +183,23 @@ namespace MasonMusicBot.Commands
                 Console.WriteLine(ex.Message);
             }
         }
+        [Command("dota")]
+        public async Task Dota(CommandContext ctx, [RemainingText] string player)
+        {
+            try
+            {
+                Console.WriteLine($"https://api.opendota.com/api/players/{player}/recentMatches");
+                var output = await client.GetStringAsync($"https://api.opendota.com/api/players/{player}/recentMatches");
+
+                await ctx.Channel.SendMessageAsync(output).ConfigureAwait(false);
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+        }
+
+
     }
 }
