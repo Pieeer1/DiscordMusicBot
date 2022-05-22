@@ -23,6 +23,8 @@ namespace MasonMusicBot.Commands
 
         private int counter = 0;
 
+        private static readonly HttpClient client = new HttpClient();
+
         private VoiceTransmitSink transmit { get; set; }
 
         private Stream pcm { get; set; }
@@ -106,9 +108,10 @@ namespace MasonMusicBot.Commands
                     Console.WriteLine(ex.Message);
                 }
             }
+            queue.RemoveAt(0);
             transmit.Dispose();
-            await transmit.FlushAsync();
-            counter = 0;
+            connection.Dispose();
+            pcm.Dispose();
         }
         [Command("queue")]
         public async Task ShowQueue(CommandContext ctx)
@@ -145,14 +148,11 @@ namespace MasonMusicBot.Commands
                 Console.WriteLine(ex.Message);
             }
         }
-
-
         [Command("pause")]
         public async Task Pause(CommandContext ctx)
         {
             if (playing == true)
             {
-
                 await ctx.Channel.SendMessageAsync("Pausing Song").ConfigureAwait(false);
                 transmit.Pause();
             }
@@ -162,7 +162,6 @@ namespace MasonMusicBot.Commands
         {
             if (playing == true)
             {
-
                 await ctx.Channel.SendMessageAsync("Continuing Song").ConfigureAwait(false);
                 await transmit.ResumeAsync();
             }
@@ -184,5 +183,23 @@ namespace MasonMusicBot.Commands
                 Console.WriteLine(ex.Message);
             }
         }
+        [Command("dota")]
+        public async Task Dota(CommandContext ctx, [RemainingText] string player)
+        {
+            try
+            {
+                Console.WriteLine($"https://api.opendota.com/api/players/{player}/recentMatches");
+                var output = await client.GetStringAsync($"https://api.opendota.com/api/players/{player}/recentMatches");
+
+                await ctx.Channel.SendMessageAsync(output).ConfigureAwait(false);
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+        }
+
+
     }
 }
