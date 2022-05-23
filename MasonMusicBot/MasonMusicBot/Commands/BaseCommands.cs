@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DSharpPlus;
-using Discord.Audio;
+
 using DSharpPlus.VoiceNext;
 using System.Diagnostics;
 using DSharpPlus.Entities;
