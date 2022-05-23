@@ -106,6 +106,8 @@ namespace MasonMusicBot.Commands
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.Message);
+                    await ctx.Channel.SendMessageAsync("Could Not Play This Video").ConfigureAwait(false);
+                    queue.RemoveAt(0);
                 }
             }
             queue.RemoveAt(0);
